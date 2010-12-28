@@ -137,4 +137,14 @@ III/ Plans
 
   - Adapt closure compiler.
 
-  - More features for supporting self-development.
+  - Add more features for supporting self-development.
+
+  - Clean up the MicroSqueak hiearachy again to make the image smaller
+    and cleaner.
+
+  - Do something with the big C array idea.  We could have a even
+    smaller image that can load binary (it could be somewhat like
+    Spoon), or we could capture the dynamic behavior of
+    MicroSqueakImageBuilder and store the sequence of image writing
+    commands in, say, C.  Then we could "replay" the commands to
+    create the image file.
