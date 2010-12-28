@@ -86,10 +86,10 @@ II/ What is it good for?
 III/ Limitations
 -----------------
 
-  - The Bootstrap Compiler generates a less efficient bytecode sequence
-    than the regular compiler.  It does not produce storeintopop
-    instructions (other than the initialization of block temps).  It
-    also has a limitation on the number of literal variables in a method.
+  - The Bootstrap Compiler and the reference implementation compiler generate a less efficient bytecode sequence
+    than the regular compiler.  They do not produce storeintopop
+    instructions (other than the initialization of block temps).  They
+    also have a limitation on the number of literal variables in a method.
     (This is why the initialize methods of VariableNode and ParseNode
     are split into a few.)  The generated methods always use big
     contexts.
