@@ -1,0 +1,1 @@
+MScanner initialize!MMessageNode initialize!MParseNode initialize!

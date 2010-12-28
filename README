@@ -1,0 +1,140 @@
+===============================================================================
+                             SqueakBootstraper
+			     by Yoshiki Ohshima
+===============================================================================
+
+SqueakBootstrapper is the first step to create a Squeak image from "text files."
+It is an MIT-licensed project.
+
+The idea consists of a few parts:
+
+  - A very small image (~120k), derived from MicroSqueak by John
+    Maloney with minimum capability of loading pre-compiled class
+    definitions and methods is serialized to an array embedded in a C
+    file.
+
+  - The BootstrapCompiler, a Squeak Bytecode Compiler written in C
+    (and leg originally by Ian Piumarata), which can generate the
+    pre-compiled files from regular Squeak Smalltalk file outs.
+
+  - A "reference implementation" of above compiler, written in
+    OMeta2/Squeak.  This produces the bit-identical binary file with
+    the above compiler.
+
+  - A mildly shrunk-down but otherwise regular Squeak Compiler.
+
+  - A host Squeak image that can create the MicroSqueak image above
+    and development.
+
+The bootstrap process goes like this:
+
+  0. The MicroSqueak image is created from the development image, and
+     the result is rendered to a C file that contains the content of
+     entire file as an "unsigned char" array.  We pretend that this
+     file is given.  This image is equipped with "BootStrapReader",
+     which can read an external file format called ".sto" from file.
+
+  1. The BootstrapCompiler in C reads the definition of the Squeak
+     Compiler written in Squeak, and generates the .sto (called
+     "compiler.sto") file.
+
+  2. The MicroSqueak reads compiler.sto and save itself.  Now, this
+     image can further read more code and compile them.
+
+  3. As the first step, compile the same Squeak Compiler code by
+     itself.
+
+  4. It now can read more files, including doits.
+
+  5. Theoretically, it can go up to the full image.
+
+Currently, only 0. through 3 are working.
+
+I/ Installation
+---------------
+
+  First install my version of "greg" from
+https://github.com/yoshikiohshima/greg .
+
+  This version of greg (which is a minor variation of leg) is equipped
+with the memoization feature, which is essential to parse non-trivial
+amount of code.  Place the greg directory by this repository.
+
+  Type "make test" in this repository.  The "image.c" is generated
+from the MicroSqueak image but put in the repo.  The command created
+from image.c creates a .image file, the compiler source code is turned
+to .sto file and it is loaded into the image.
+
+II/ What is it good for?
+-------------------------
+
+  - A separated copmiler implementation and class hierarchy lets
+    people who want to do a deep change to Squeak without shooting
+    your own foot.
+
+  - A long-standing problem of not being able to create the image from
+    text files may be now solvable.
+
+  - A clean starting point that can grow may give you a fresh
+    opportunity to redesign the entire system.
+
+  - A C-based compiler is blazingly fast.  Compiling the 150k of code
+    takes less than half-second.  Loading the .sto file is also quite
+    fast.  This format alone may have some other use (i.e., a
+    lightweight persistent/code migration).
+
+III/ Limitations
+-----------------
+
+  - The Bootstrap Compilers generates less efficient bytecode sequence
+    than the regular compiler.  It does not produces storeintopop
+    instructions (other than the initialization of block temps).  It
+    also has a limitation of number of literal variables in a method.
+    (This is why the initialize methods of VariableNode and ParseNode
+    are split into a few.)  The generated methods always use big
+    contexts.
+
+  - The compilers are not closure-aware.
+
+  - The class builder in the image does not support class mutation,
+    but only addition of new classes.
+
+  - The entry point #start method is intended to be "clean" over image
+    saving; i.e., when the image is saved, it schedules the new
+    process that should be launched freshly in the new session but the
+    process that saved the image is supposed to cleanly go away.  In
+    other words, if you keep loading the same methods and
+    save-and-quit the image over and over again, the image size should
+    stay exactly the same.  But there is a context object or two
+    accumulating every cycle.
+
+  - The development image is not a standard version.  It is
+    3.8-derived, but some changes from trunk are brought into it.
+    Also, the dictionary that is used by the other parts of dev-image
+    and MicroSqueak hierarchy are different; this tends to cause
+    troubles.
+
+III/ Development
+-----------------
+
+  You (still) need the development image:
+
+http://tinlizzie.org/~ohshima/SqueakBootstrapper.zip
+
+With this, you would add more classes to the MObject hierarchy and try
+to test things there.  There is MTestCase class so it is a good idea
+to write some tests, as the ability of interactive debugging is often
+limited.
+
+You can generate a new MicroSqueak image with your change, but also
+file out your code to .st and create a .sto file, and load it by
+giving the file name to the command line argument of Squeak
+invocation.  (The third argument of the command line specifies whether
+the image should be saved at the end or not.)
+
+III/ Plans
+----------------------
+
+  - Adapt closure compiler.
+
+  - More features for supporting self-development.
