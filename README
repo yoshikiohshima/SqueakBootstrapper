@@ -68,9 +68,9 @@ to .sto file and it is loaded into the image.
 II/ What is it good for?
 -------------------------
 
-  - A separated copmiler implementation and class hierarchy lets
-    people who want to do a deep change to Squeak without shooting
-    your own foot.
+  - By separating the compiler implementation and class hierarchy,
+    people can do a deep change to Squeak without shooting
+    their own foot.
 
   - A long-standing problem of not being able to create the image from
     text files may be now solvable.
@@ -86,18 +86,18 @@ II/ What is it good for?
 III/ Limitations
 -----------------
 
-  - The Bootstrap Compilers generates less efficient bytecode sequence
-    than the regular compiler.  It does not produces storeintopop
+  - The Bootstrap Compiler generates a less efficient bytecode sequence
+    than the regular compiler.  It does not produce storeintopop
     instructions (other than the initialization of block temps).  It
-    also has a limitation of number of literal variables in a method.
+    also has a limitation on the number of literal variables in a method.
     (This is why the initialize methods of VariableNode and ParseNode
     are split into a few.)  The generated methods always use big
     contexts.
 
   - The compilers are not closure-aware.
 
-  - The class builder in the image does not support class mutation,
-    but only addition of new classes.
+  - The class builder in the image does not support class mutation -
+    only the addition of new classes.
 
   - The entry point #start method is intended to be "clean" over image
     saving; i.e., when the image is saved, it schedules the new
@@ -109,10 +109,10 @@ III/ Limitations
     accumulating every cycle.
 
   - The development image is not a standard version.  It is
-    3.8-derived, but some changes from trunk are brought into it.
-    Also, the dictionary that is used by the other parts of dev-image
-    and MicroSqueak hierarchy are different; this tends to cause
-    troubles.
+    3.8-derived, with some changes from trunk.
+    Also, the dictionary that is used by the other parts of the
+    dev-image and MicroSqueak hierarchy are different; this tends
+    to cause troubles.
 
 III/ Development
 -----------------
