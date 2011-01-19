@@ -146,7 +146,7 @@ validate_value(value a)
       fprintf(stderr, "size mismatch\n");
     }
     for (i = 0; i < a->size; i++) {
-      if (a->body.string[i] > 127) {
+      if (a->body.string[i] & 0x80) {
         fprintf(stderr, "string corrupted\n");
         fprintf(stderr, "%d %d %d %s\n", i, a->size, a->serial, a->body.string);
         exit(1);
