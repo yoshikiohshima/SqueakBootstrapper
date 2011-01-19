@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-typedef unsigned char uchar;
+typedef char uchar;
 
 FILE *input = NULL;
 FILE *output = NULL;
@@ -39,7 +39,7 @@ typedef struct _value {
   int size;
   int serial;
   union {
-    uchar *string;
+    char *string;
     int integer;
     struct _value **expression;
   } body;
@@ -57,9 +57,9 @@ typedef struct _value {
 #define SCODE 7
 
 void validate_value(value a);
-value mk_symbol(uchar *string);
-value mk_assoc(uchar *string);
-value mk_char(uchar c);
+value mk_symbol(char *string);
+value mk_assoc(char *string);
+value mk_char(char c);
 
 static value parse_result = NULL;
 static value encode_result = NULL;
@@ -196,7 +196,7 @@ print_value(value a)
 }
 
 value
-mk_value(int type, uchar *string, int integer)
+mk_value(int type, char *string, int integer)
 {
   value v = new_value();
   
@@ -290,15 +290,15 @@ mk_null()
 }
 
 value
-mk_string(uchar *string)
+mk_string(char *string)
 {
   return mk_value(SSTRING, string, 0);
 }
 
 value
-mk_unquote_string(uchar *string)
+mk_unquote_string(char *string)
 {
-  uchar n[10240];
+  char n[10240];
  
   int i = 0, j = 0;
   n[0] = 0;
@@ -314,25 +314,25 @@ mk_unquote_string(uchar *string)
 }
 
 value
-mk_symbol(uchar *string)
+mk_symbol(char *string)
 {
   return mk_value(SSYMBOL, string, 0);
 }
 
 value
-mk_char(uchar c)
+mk_char(char c)
 {
   return mk_value(SCHAR, "", c);
 }
 
 value
-mk_code(uchar *string, int size)
+mk_code(char *string, int size)
 {
   return mk_value(SCODE, string, size);
 }
 
 value
-mk_assoc(uchar *string)
+mk_assoc(char *string)
 {
   return mk_value(SASSOC, string, 0);
 }
@@ -344,7 +344,7 @@ mk_integer(int v)
 }
 
 int
-digitValue(uchar v)
+digitValue(char v)
 {
   if ('0' <= v && v <= '9') {
     return v - '0';
@@ -360,7 +360,7 @@ digitValue(uchar v)
 value
 code_append(value a, value b)
 {
-  static uchar code[10240];
+  static char code[10240];
   if (a == NULL || b == NULL) {
     fprintf(stderr, "null value for append\n");
     exit(1);
@@ -373,8 +373,8 @@ code_append(value a, value b)
     exit(1);
   }
 
-  memcpy(code, a->body.string, sizeof(uchar) * a->size);
-  memcpy(code+a->size, b->body.string, sizeof(uchar) * b->size);
+  memcpy(code, a->body.string, a->size);
+  memcpy(code+a->size, b->body.string, b->size);
   return mk_code(code, a->size + b->size);
 }
 
@@ -429,7 +429,7 @@ value
 symbol_copy_with(value a, value b)
 {
   value v = new_value();
-  uchar *buf;
+  char *buf;
   int new_size;
   
   if ((a->type != SSYMBOL && a->type != SSTRING) || (b->type != SSYMBOL && b->type != SSTRING)) {
@@ -455,13 +455,13 @@ value inst_vars;
 value temporaries;
 value arguments;
 
-uchar class_name[200];
+char class_name[200];
 value message;
 
 value blockTemps;
 int maxTemporaries;
 
-uchar class_name_prefix[10];
+char class_name_prefix[10];
 
 static value special_variables = NULL;
 static value special_selectors = NULL;
@@ -586,7 +586,7 @@ fifth(value l)
   return expression_at(l, 4);
 }
 
-uchar*
+char*
 string_of(value e)
 {
   if (e->type == SSTRING || e->type == SSYMBOL || e->type == SASSOC) {
@@ -606,7 +606,7 @@ integer_of(value e)
   exit(1);
 }
 
-uchar*
+char*
 code_of(value e)
 {
   if (e->type == SCODE) {
@@ -620,14 +620,14 @@ code_of(value e)
 #define NextPut(buffer, pos, v) do {pos = next_put(buffer, pos, v);} while(0)
 
 int
-next_put(uchar* buffer, int pos, uchar v)
+next_put(char* buffer, int pos, char v)
 {
   buffer[pos++] = v;
   return pos;
 }
 
 int
-next_put_all(uchar* buffer, int pos, value v)
+next_put_all(char* buffer, int pos, value v)
 {
   if (v->type == SCODE || v->type == SSTRING || v->type == SSYMBOL || v->type == SASSOC) {
     memcpy(buffer+pos, v->body.string, v->size);
@@ -638,13 +638,13 @@ next_put_all(uchar* buffer, int pos, value v)
 value
 emit_variable_long(int mode, int code)
 {
-  uchar aStream[5];
+  char aStream[5];
   int pos = 0;
   int type;
   int index;
-  static const uchar temp1[] = {64, 0, 96, 128};
-  static const uchar temp2[] = {160, 0, 0, 224};
-  static const uchar temp3[] = {192, 0, 0, 0};
+  static const char temp1[] = {64, 0, 96, 128};
+  static const char temp2[] = {160, 0, 0, 224};
+  static const char temp3[] = {192, 0, 0, 0};
 
   if (code < 256) {
     if (code < 16) {
@@ -700,15 +700,15 @@ value
 emit_store_pop_variable(int code)
 {
   if (0 <= code && code <= 7) {
-    uchar c[1] = {ShortStoP + code};
+    char c[1] = {ShortStoP + code};
     return mk_code(c, 1); //"short stopop inst"
   }
   if (16 <= code && code <= 23) {
-    uchar c[1] = {ShortStoP + 8 + code - 16};
+    char c[1] = {ShortStoP + 8 + code - 16};
     return mk_code(c, 1); // "short stopop temp"
   }
   if (code >= 256 && (code % 256 > 63 && (code / 256 == 4))) {
-    uchar c[1] = {Pop};
+    char c[1] = {Pop};
     return code_append(emit_variable_long(Store, code), mk_code(c, 1));
   } else {
     return emit_variable_long(StorePop, code);
@@ -734,7 +734,7 @@ emit_jump_long(int distance, int code)
     fprintf(stderr, "A block compiles more than 1K bytes of code\n");
     exit(1);
   } else {
-    uchar aStream[2] = {distance / 256 + code, distance % 256};
+    char aStream[2] = {distance / 256 + code, distance % 256};
     return mk_code(aStream, 2);
   }
 }
@@ -742,7 +742,7 @@ emit_jump_long(int distance, int code)
 value
 emit_block(value block, value args, value returns)
 {
-  uchar aStream[1000];
+  char aStream[1000];
   int pos = 0;
   value t;
   value args_code;
@@ -773,7 +773,7 @@ emit_block(value block, value args, value returns)
 value
 emit_variable(int code)
 {
-  uchar strm[1];
+  char strm[1];
   if (code < 256) {
     strm[0] = code == LdSuper ? LdSelf : code;
     return mk_code(strm, 1);
@@ -809,7 +809,7 @@ value
 emit_integer(int v)
 {
   if (-1 <= v && v <= 2) {
-    uchar c = LdMinus1 + (v + 1);
+    char c = LdMinus1 + (v + 1);
     return mk_code(&c, 1);
   }
   return emit_lit_variable(mk_integer(v));
@@ -818,7 +818,7 @@ emit_integer(int v)
 value
 emit_send(int code, int nArgs, int supered)
 {
-  uchar aStream[5];
+  char aStream[5];
   int pos = 0;
   int index;
   if (!supered && (code - Send < SendLimit && nArgs < 3)) {
@@ -855,7 +855,7 @@ value
 emit_jump_short_or_long(int dist, int short_code)
 {
   if (1 <= dist && dist <= JmpLimit) {
-    uchar strm[1] = {short_code + dist - 1};
+    char strm[1] = {short_code + dist - 1};
     return mk_code(strm, 1);
   }
 
@@ -865,7 +865,7 @@ emit_jump_short_or_long(int dist, int short_code)
 value
 emit_branch_on(int condition, int dist)
 {
-  uchar c[1];
+  char c[1];
   if (dist == 0) {
     c[0] = Pop;
     return mk_code(c, 1);
@@ -898,7 +898,7 @@ value
 assign(value tree)
 {
   value v = second(second(tree));
-  uchar *vv = string_of(v);
+  char *vv = string_of(v);
   value e = encode(third(tree));
   int ind;
   int code = 0;
@@ -960,7 +960,7 @@ value
 encode_return(value tree)
 {
   value l = encode(second(tree));
-  uchar c = EndMethod;
+  char c = EndMethod;
   return code_append(l, mk_code(&c, 1));
 }
 
@@ -1020,7 +1020,7 @@ value
 variable(value tree)
 {
   value v = second(tree);
-  uchar *vv = string_of(v);
+  char *vv = string_of(v);
   int ind;
 
   if ('A' <= vv[0] && vv[0] <= 'Z') {
@@ -1028,7 +1028,7 @@ variable(value tree)
     return emit_load(ind + CodeBases[LdLitIndType]);
   }
   if ((ind = index_of(special_variables, v)) > 0) {
-    static uchar sp[] = {LdSelf, LdThisContext, LdSuper, LdNil, LdFalse, LdTrue};
+    static char sp[] = {LdSelf, LdThisContext, LdSuper, LdNil, LdFalse, LdTrue};
     return mk_code(sp + (ind - 1), 1);
   }
   if ((ind = index_of(arguments, v)) > 0) {
@@ -1052,7 +1052,7 @@ variable(value tree)
 value
 emit_if(value tree)
 {
-  uchar *sel = string_of(second(tree));
+  char *sel = string_of(second(tree));
   value t;
   value f;
   value r;
@@ -1077,7 +1077,7 @@ emit_if(value tree)
   }
 
   {
-    uchar ret[4096];
+    char ret[4096];
     int pos = 0;
     int s = (f == NULL || f->size == 0) ? 1 : f->size;
     value false_code = emit_jump_short_or_long(s, Jmp);
@@ -1103,8 +1103,8 @@ emit_if(value tree)
 value
 emit_while(value tree)
 {
-  uchar *sel = string_of(second(tree));
-  uchar ret[4096];
+  char *sel = string_of(second(tree));
+  char ret[4096];
   int pos = 0;
   value r;
   value body = NULL;
@@ -1148,7 +1148,7 @@ send_receiver_args_supered(value sel, value rec, value args, int supered)
   value a;
   index = index_of(special_selectors, sel);
   if (index > 0 && !supered) {
-    uchar c = index + SendPlus - 1;
+    char c = index + SendPlus - 1;
     int i;
     if (args->size == 0) {
       return code_append(rec, mk_code(&c, 1));
@@ -1178,7 +1178,7 @@ cascade(value tree)
 {
   value rec = encode(second(tree));
   value rest = mk_expression_size(tree->size - 2);
-  uchar ret[2000];
+  char ret[2000];
   int pos = 0;
   int i;
   for (i = 2; i < tree->size; i++) {
@@ -1249,8 +1249,8 @@ send(value tree)
   value receiver;
   int i;
 
-  static uchar su[1] = {LdSuper};
-  static uchar self[1] = {LdSelf};
+  static char su[1] = {LdSuper};
+  static char self[1] = {LdSelf};
 
   if ((ret = macro_expand(tree)) != NULL) {
     return ret;
@@ -1272,7 +1272,7 @@ value
 sequence(value tree)
 {
   value l = encode(second(tree));
-  uchar c = Pop;
+  char c = Pop;
   value l1 = code_append(l, mk_code(&c, 1));
   value r;
   
@@ -1307,7 +1307,7 @@ method(value tree)
 {
   value e;
   value tail;
-  static uchar pop_self[2] = {Pop, 120};
+  static char pop_self[2] = {Pop, 120};
   message = second(second(tree));
 
   arguments = third(second(tree));
@@ -1321,8 +1321,8 @@ method(value tree)
 }
 
 static value Smalltalk = NULL;
-value lookup_all_inst_vars(uchar *s);
-void add_inst_vars(uchar *s, uchar *p, value l);
+value lookup_all_inst_vars(char *s);
+void add_inst_vars(char *s, char *p, value l);
 value generate_method(value bytes);
 value generate_doit(value str);
 value generate_init(value str);
@@ -1339,10 +1339,10 @@ encode_start(value tree)
     add_inst_vars(string_of(c), string_of(p), iv);
     return generate_class_def(c, p, iv, cv);
   } else if (equals(first(tree), mk_symbol("methodDef"))) {
-    uchar trailer[4] = {0, 0, 0, 0};
+    char trailer[4] = {0, 0, 0, 0};
     value m;
-    uchar *c = string_of(first(second(tree)));
-    uchar * meta = string_of(second(second(tree)));
+    char *c = string_of(first(second(tree)));
+    char * meta = string_of(second(second(tree)));
     if(strncmp(c, class_name_prefix, strlen(class_name_prefix)) == 0) {
       c = c + strlen(class_name_prefix);
     }
@@ -1365,15 +1365,15 @@ encode_start(value tree)
 typedef value (*encoder)(value e);
 
 struct _encoder_entry {
-  uchar *name;
+  char *name;
   encoder func;
 };
 
 value
-scan_variables(uchar *s)
+scan_variables(char *s)
 {
   value l = mk_expression0();
-  uchar buf[2000];
+  char buf[2000];
   int size = strlen(s);
   int start = 0;
   int i = 0;
@@ -1402,7 +1402,7 @@ scan_variables(uchar *s)
 }
 
 void
-add_inst_vars(uchar *s, uchar *p, value l)
+add_inst_vars(char *s, char *p, value l)
 {
   Smalltalk
     = expression_append(Smalltalk,
@@ -1412,10 +1412,10 @@ add_inst_vars(uchar *s, uchar *p, value l)
 }
 
 value
-lookup_all_inst_vars(uchar *s)
+lookup_all_inst_vars(char *s)
 {
   int i;
-  uchar *p = NULL;
+  char *p = NULL;
   if (s == NULL || s[0] == 0) {
     return mk_expression0();
   }
@@ -1439,7 +1439,7 @@ lookup_all_inst_vars(uchar *s)
 }
 
 encoder
-lookup_encoder(uchar *s)
+lookup_encoder(char *s)
 {
 # define E(v) {#v, v}
   static struct _encoder_entry table[] = {
@@ -1471,7 +1471,7 @@ encode(value e)
 value
 doit_cpy(char *inbuf, value s, value e)
 {
-  uchar buf[10240];
+  char buf[10240];
   int start = integer_of(s);
   int end = integer_of(e);
   strncpy(buf, inbuf+start, end-start);
@@ -1488,7 +1488,7 @@ doit_cpy(char *inbuf, value s, value e)
 #define METHODDEF 252
 #define CLASSDEF 254
 
-uchar collection[10240];
+char collection[10240];
 static int max_pos;
 static int current_pos;
 
@@ -1508,7 +1508,7 @@ int32(int i)
 }
 
 void
-generate_string(uchar *v, int size)
+generate_string(char *v, int size)
 {
   int32(size);
   memcpy(collection+current_pos, v, size);
@@ -1578,8 +1578,8 @@ generate_class_def(value c, value p, value iCol, value cCol)
   value cn;
   value pn;
   value code;
-  uchar iv[2000];
-  uchar cv[2000];
+  char iv[2000];
+  char cv[2000];
   int i;
   int size;
   int pos;
