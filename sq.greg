@@ -24,7 +24,7 @@ typedef char uchar;
 FILE *input = NULL;
 FILE *output = NULL;
 
-#define YY_INPUT(buf, result, max_size)                \
+#define YY_INPUT(buf, result, max_size, D)             \
         {                                              \
           int yyc= getc(input);                        \
           result= (EOF == yyc) ? 0 : (*(buf)= yyc, 1); \
