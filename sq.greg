@@ -1862,7 +1862,7 @@ dot       = '.' -
 
 comment   = '\"' (!'\"' .)* '\"'
 
--         = ([ \t\n\r] | comment)*
+-         = ([ \t\n\r\f] | comment)*
 
 %%
 
